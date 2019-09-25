@@ -93,22 +93,32 @@ dashboardPage(  dashboardHeader(title = "Control Charts"),
                             )
                     ),
                     
-                    
-                    tabItems(
-                      # First tab content
-                      tabItem(tabName = "chart",
-                              fluidRow(
-                                box(title = "Chart Type", width = 4,
-                                    selectInput()
+                    tabItem(tabName = "chart",
+                            fluidRow(
+                              box(title = "Chart Type", width = 4,
+                                  uiOutput("chart_choices")
+                                 )
                               ),
-                              fluidRow(
-                                box(title = "", width = 12,
-                                    plotly::plotlyOutput()
+                            fluidRow(
+                              box(title = "X-Axis", width = 4,
+                                  uiOutput("x_axis")
+                                  ),
+                              box(title = "Y-Axis", width = 4,
+                                  uiOutput("y_axis")
+                                  ),
+                              box(title = "N", width = 4,
+                                  uiOutput("n")
+                                  )
+                              ),
+                            fluidRow(
+                                box(title = "Control Chart", width = 12,
+                                    plotOutput("chart")
                                 )
                               )
-                      )
+                            )
+                            
+                            
+                            
+                    )
                     
-                    
-                  )
-                )
-)
+))
