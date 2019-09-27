@@ -3,14 +3,25 @@ library(shinydashboard)
 dashboardPage(  dashboardHeader(title = "Control Charts"),
                 dashboardSidebar(
                   sidebarMenu(
-                    menuItem("Upload Data", tabName = "upload", icon = icon("upload")),
-                    menuItem("Data Typing", tabName = "selection", icon = icon("project-diagram")),
-                    menuItem("Control Chart", tabName = "chart", icon = icon("chart-line"))
+                    menuItem("Home", tabName = "home", icon = icon("home")),
+                    menuItem("Upload Data", tabName = "upload", 
+                             icon = icon("upload")),
+                    menuItem("Data Typing", tabName = "selection", 
+                             icon = icon("project-diagram")),
+                    menuItem("Control Chart", tabName = "chart", 
+                             icon = icon("chart-line"))
                   )
                 ),
                 dashboardBody(
                   tabItems(
-                    # First tab content
+                    tabItem(tabName = "home",
+                            fluidRow(
+                              column(width = 11
+                                     ,
+                                     includeMarkdown("home.md"), offset = 1
+                              )
+                            )
+                    ),
                     tabItem(tabName = "upload",
                             fluidRow(
                               box(title = "Upload CSV File", width = 4,
@@ -101,12 +112,15 @@ dashboardPage(  dashboardHeader(title = "Control Charts"),
                               ),
                             fluidRow(
                               box(title = "X-Axis", width = 4,
+                                  p("Choose a column in the dataset for the x-axis"),
                                   uiOutput("x_axis")
                                   ),
                               box(title = "Y-Axis", width = 4,
+                                  p("Choose a column in the dataset for the y-axis"),
                                   uiOutput("y_axis")
                                   ),
                               box(title = "N", width = 4,
+                                  p("Subgroup sizes (denominator)"),
                                   uiOutput("n")
                                   )
                               ),

@@ -1,0 +1,8 @@
+type,opportunity,subgroup,chart
+Count,Unequal,NA,u
+Count,Equal,NA,c
+Count,Equal,NA,u
+Classification,NA,NA,p
+Continuous,NA,Single Observation,i
+Continuous,NA,Multiple Values,xbar
+Continuous,NA,Multiple Values,s

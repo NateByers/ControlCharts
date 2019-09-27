@@ -1,5 +1,6 @@
 library(shiny)
 library(dplyr)
+library(qicharts2)
 
 server <- function(input, output) { 
   
@@ -69,12 +70,21 @@ server <- function(input, output) {
   output$n <- renderUI({
     df <- get_file_contents()
     
-    selectInput("n", label = "", choices = c(NULL, names(df)))
+    selectInput("n", label = "", choices = c(NA, names(df)), selected = NA)
   })
   
   output$chart <- renderPlot({
     df <- get_file_contents()
-    qic(df[[input$x_axis]], df[[input$y_axis]], df[[input$n]],
+    
+    n <- input$n
+    
+    if(is.na(n)) {
+      n <- NULL
+    } else {
+      n <- df[[n]]
+    }
+    
+    qic(df[[input$x_axis]], df[[input$y_axis]], n,
         chart = input$chart)
   })
   
