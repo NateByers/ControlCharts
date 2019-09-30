@@ -1,6 +1,8 @@
 library(shiny)
+library(shinyjs)
 library(dplyr)
 library(DT)
+library(ggplot2)
 library(qicharts2)
 
 server <- function(input, output, session) { 
@@ -18,8 +20,18 @@ server <- function(input, output, session) {
   })
   
   output$file_preview_help <- renderText({
-    if(!is.null(input$source_file)) {
-      "This tab shows the currently uploaded source data."
+    if(!is.null(values$source_data)) {
+      NULL
+    } else {
+      "Your uploaded data will appear here"
+    }
+  })
+
+  output$control_chart_help <- renderText({
+    if(inherits(control_chart(), 'try-error')) {
+      "Your chart output will appear here"
+    } else {
+      NULL
     }
   })
   
@@ -55,8 +67,10 @@ server <- function(input, output, session) {
   
   ###### File Upload ######
   
-  get_file_contents <- reactive({
-    
+  values <- reactiveValues(source_data = NULL)
+  
+  observeEvent(input$source_file, {
+
     req(input$source_file)
     
     tryCatch(
@@ -69,13 +83,15 @@ server <- function(input, output, session) {
       }
     )
     
-    df
+    session$sendCustomMessage("enable_next", "file_next")
+    
+    values$source_data <- df
     
   })
   
   output$file_preview <- renderDT({
     
-    get_file_contents()
+    values$source_data
     
   })
   
@@ -108,27 +124,19 @@ server <- function(input, output, session) {
     
   })
   
-  output$x_axis <- renderUI({
-    df <- get_file_contents()
+  observeEvent(values$source_data, {
     
-    selectInput("x_axis", label = "", choices = names(df))
+    x <- colnames(values$source_data)
+    
+    updateSelectInput(session, "x_axis", choices = x, selected = x[1])
+    updateSelectInput(session, "y_axis", choices = x, selected = x[2])
+    updateSelectInput(session, "n", choices = c(NA, x), selected = NA)
+    
   })
-  
-  output$y_axis <- renderUI({
-    df <- get_file_contents()
+
+  control_chart <- reactive({
     
-    selectInput("y_axis", label = "", choices = names(df), names(df)[2])
-  })
-  
-  output$n <- renderUI({
-    df <- get_file_contents()
-    
-    selectInput("n", label = "", choices = c(NA, names(df)), selected = NA)
-  })
-  
-  output$control_chart <- renderPlot({
-    
-    df <- get_file_contents()
+    df <- values$source_data
     
     n <- input$n
     
@@ -138,8 +146,43 @@ server <- function(input, output, session) {
       n <- df[[n]]
     }
     
-    qic(df[[input$x_axis]], df[[input$y_axis]], n,
-        chart = input$chart)
+    try(qic(df[[input$x_axis]], df[[input$y_axis]], n,
+        chart = input$chart), silent = TRUE)
+    
+  })
+  
+  output$download_chart <- downloadHandler(
+    filename = function() {
+      paste0("control_chart_", Sys.Date(), ".png")
+    },
+    content = function(file) {
+      
+      if(input$size_units == 'pixels') {
+        width <- input$chart_width / 300
+        height <- input$chart_height / 300
+        units <- "in"
+      } else {
+        width = input$chart_width
+        height = input$chart_height
+        units <- input$size_units
+      }
+      
+      ggplot2::ggsave(file, plot = control_chart(), device = "png", width = width, height = height, units = units)
+      
+    }
+  )
+  
+  output$control_chart <- renderPlot({
+    if(!inherits(control_chart(), 'try-error')) {
+      control_chart()
+    }
+  })
+  
+  observeEvent(input$restart, {
+    
+    values$source_data <- NULL
+    reset('source_file')
+    
   })
   
 }
