@@ -1,138 +1,91 @@
+library(shiny)
 library(shinydashboard)
+library(shinyWidgets)
+library(shinydashboardPlus)
 
-dashboardPage(  dashboardHeader(title = "Control Charts"),
-                dashboardSidebar(
-                  sidebarMenu(
-                    menuItem("Home", tabName = "home", icon = icon("home")),
-                    menuItem("Upload Data", tabName = "upload", 
-                             icon = icon("upload")),
-                    menuItem("Data Typing", tabName = "selection", 
-                             icon = icon("project-diagram")),
-                    menuItem("Control Chart", tabName = "chart", 
-                             icon = icon("chart-line"))
-                  )
-                ),
+addHelpBlock <- function(x, help_text = "") {
+  
+  id <- x$children[[1]]$attribs$`for`
+  
+  help_block <- tags$span(id = paste0(id, "_help_block"), class = 'shiny-text-output help-block', help_text)
+  
+  x$children[[length(x$children) + 1]] <- help_block
+  
+  return(x)
+  
+}
+
+dashboardPage(
+  dashboardHeaderPlus(title = "Control Charts"),
+                dashboardSidebar(disable = TRUE),
                 dashboardBody(
-                  tabItems(
-                    tabItem(tabName = "home",
-                            fluidRow(
-                              column(width = 11
-                                     ,
-                                     includeMarkdown("home.md"), offset = 1
-                              )
-                            )
+                  tags$head(tags$script(src = "script.js")),
+                  useShinyjs(),
+                  fluidRow(
+                    column(width = 3,
+                      box(id = "upload_box", width = NULL, title = tagList(icon("upload"), "Upload Data"), 
+                          collapsible = TRUE,
+                          tags$p("Use this Upload Data box to upload your dataset. The file must be a flat comma separated (.csv) file with headers."),
+                          fileInput("source_file", "", multiple = FALSE,
+                            accept = c("text/csv",
+                                       "text/comma-separated-values,text/plain",
+                                       ".csv")
+                          ),
+                          tags$button(id = "file_next", class = "pull-right btn btn-default", disabled = 'disabled', onclick = 'open_box("typing_box")', "Next", icon("arrow-right"))
+                      ),
+                      box(id = "typing_box", width = NULL, title = tagList(icon("project-diagram"), "Data Typing"), collapsible = TRUE, collapsed = TRUE,
+                        tags$p("This Data Typing box allows you to categorize the type of data you are uploading so that the right control chart can be selected. The selections are based on the flow chart on page 151 of The Health Care Data Guide."),
+                        addHelpBlock(selectizeInput("data_type", label = "Type of Data",
+                                                                 choices = c("Count or Classification",
+                                                                             "Continuous")), "Testing"),
+                        conditionalPanel(
+                          condition = "input.data_type == 'Count or Classification'",
+                          addHelpBlock(selectInput("nonconformities", label = "Nonconformities",
+                            choices = c("Count", "Classification")
+                          )),
+                          addHelpBlock(selectInput("opportunity", label = "Area of Opportunity",
+                            choices = c("Equal", "Unequal")
+                          ))
+                        ),
+                        conditionalPanel(
+                          condition = "input.data_type == 'Continuous'",
+                          addHelpBlock(selectInput("subgroups", label = "Subgroups",
+                            choices = c("Single Observation", "Multiple Values")
+                          ))
+                        ),
+                        tags$button(id = "file_next", class = "pull-right btn btn-default", onclick = 'open_box("chart_box")', "Next", icon("arrow-right"))
+                      ),
+                      box(id = "chart_box", width = NULL, title = tagList(icon("chart-line"), "Control Chart Options"), collapsible = TRUE, collapsed = TRUE,
+                        tags$p("Once your data is uploaded and it's type is categorized, the Control Chart sidebar item can be used to create a control chart that can be downloaded."),
+                        addHelpBlock(selectInput("chart_type", label = "Chart Type", choices = c())),
+                        addHelpBlock(selectInput("x_axis", label = "X-Axis", choices = c()), "Choose a column in the dataset for the x-axis"),
+                        addHelpBlock(selectInput("y_axis", label = "Y-Axis", choices = c()), "Choose a column in the dataset for the y-axis"),
+                        addHelpBlock(selectInput("n", label = "N", choices = c()), "Subgroup sizes (denominator)"),
+                        tags$button(id = "file_next", class = "pull-right btn btn-default", onclick = 'open_box("download_box")', "Next", icon("arrow-right"))
+                      ),
+                      box(id = "download_box", width = NULL, title = tagList(icon("download"), "Download Chart"), collapsible = TRUE, collapsed = TRUE,
+                        fluidRow(
+                          column(width = 4, numericInput('chart_width', "Width", value = 1920)),
+                          column(width = 4, numericInput('chart_height', "Height", value = 768)),
+                          column(width = 4, selectInput('size_units', "Units", choices = c('pixels', 'in', 'cm', 'mm'), selected = 'pixels'))
+                        ),
+                        downloadButton("download_chart", "Download Chart"),
+                        tags$button(id = "restart", class = "action-button pull-right btn btn-default", onclick = 'reset_app()', "Restart", icon("undo"))
+
+                      )
                     ),
-                    tabItem(tabName = "upload",
-                            fluidRow(
-                              box(title = "Upload CSV File", width = 4,
-                                  fileInput("file1", "",
-                                            multiple = FALSE,
-                                            accept = c("text/csv",
-                                                       "text/comma-separated-values,text/plain",
-                                                       ".csv")))
-                
-                            ),
-                            fluidRow(
-                              box(title = "File Preview", width = 12,
-                                  dataTableOutput("contents")
-                              )
-                            )
-                    ),
-                    
-                    # Second tab content
-                    tabItem(tabName = "selection",
-                            fluidRow(
-                              box(title = "Type of Data", width = 4,
-                                  selectInput("type", label = "",
-                                              choices = c("Count or Classification",
-                                                          "Continuous")),
-                                  conditionalPanel(
-                                    condition = "input.type == 'Count or Classification'",
-                                    p("Whole numbers that are counted, not measured.")
-                                    
-                                  ),
-                                  conditionalPanel(
-                                    condition = "input.type == 'Continuous'",
-                                    p("Measurement on some scale like time, money, throughput, ect.")
-                                  )
-                                  ),
-                              conditionalPanel(
-                                condition = "input.type == 'Count or Classification'",
-                                box(title = "Nonconformites", width = 4,
-                                    selectInput("nonconformities", label = "",
-                                                choices = c("Count", "Classification")),
-                                    conditionalPanel(
-                                      condition = "input.nonconformities == 'Count'",
-                                      p("Whole number of errors per subgroup. Numerator can be greater than denominator (opportunities).")
-                                    ),
-                                    conditionalPanel(
-                                      condition = "input.nonconformities == 'Classification'",
-                                      p("Pass/Fail. Numerator can't be greater than denominator (n).")
-                                    ))
-                                
-                              ),
-                              conditionalPanel(
-                                condition = "input.type == 'Continuous'",
-                                box(title = "Subgroups", width = 4,
-                                    selectInput("subgroups", label = "",
-                                                choices = c("Single Observation",
-                                                            "Multiple Values")),
-                                    conditionalPanel(
-                                      condition = "input.subgroups == 'Single Observation'",
-                                      p("Each subgroup is composed of a single observation.")
-                                    ),
-                                    conditionalPanel(
-                                      condition = "input.subgroups == 'Multiple Values'",
-                                      p("Each subgroup is composed of multiple values.")
-                                    ))
-                              ),
-                              conditionalPanel(
-                                condition = "input.type == 'Count or Classification'",
-                                box(title = "Area of Opportunity", width = 4,
-                                    selectInput("opportunity", label = "",
-                                                choices = c("Equal", "Unequal")),
-                                    conditionalPanel(
-                                      condition = "input.opportunity == 'Equal'",
-                                      p("The denominator (n) is always the same.")
-                                    ),
-                                    conditionalPanel(
-                                      condition = "input.opportunity == 'Unequal'",
-                                      p("The denominator (n) changes.")
-                                    ))
-                              )
-                              
-                            )
-                    ),
-                    
-                    tabItem(tabName = "chart",
-                            fluidRow(
-                              box(title = "Chart Type", width = 4,
-                                  uiOutput("chart_choices")
-                                 )
-                              ),
-                            fluidRow(
-                              box(title = "X-Axis", width = 4,
-                                  p("Choose a column in the dataset for the x-axis"),
-                                  uiOutput("x_axis")
-                                  ),
-                              box(title = "Y-Axis", width = 4,
-                                  p("Choose a column in the dataset for the y-axis"),
-                                  uiOutput("y_axis")
-                                  ),
-                              box(title = "N", width = 4,
-                                  p("Subgroup sizes (denominator)"),
-                                  uiOutput("n")
-                                  )
-                              ),
-                            fluidRow(
-                                box(title = "Control Chart", width = 12,
-                                    plotOutput("chart")
-                                )
-                              )
-                            )
-                            
-                            
-                            
+                    column(width = 9,
+                      tabBox(width = NULL,
+                        tabPanel("File Preview",
+                          tags$h3(style = "text-align: center", textOutput("file_preview_help")),
+                          DT::DTOutput("file_preview")         
+                        ),
+                        tabPanel("Control Chart",
+                          tags$h3(style = "text-align: center", textOutput("control_chart_help")),
+                          plotOutput("control_chart")         
+                        )
+                      )       
                     )
+                  )
                     
 ))
