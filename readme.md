@@ -1,9 +1,4 @@
----
-title: "Shiny App for Control Charts"
-output: 
-  html_document: 
-    keep_md: yes
----
+
 
 
 
