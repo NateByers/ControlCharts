@@ -147,7 +147,10 @@ server <- function(input, output, session) {
     }
     
     try(qic(df[[input$x_axis]], df[[input$y_axis]], n,
-        chart = input$chart), silent = TRUE)
+        chart = input$chart_type, title = input$main_title,
+        xlab = ifelse(input$x_title == "", input$x_axis, input$x_title),
+        ylab = ifelse(input$y_title == "", input$y_title, input$y_title)),
+        silent = TRUE)
     
   })
   

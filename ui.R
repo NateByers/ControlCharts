@@ -2,6 +2,7 @@ library(shiny)
 library(shinydashboard)
 library(shinyWidgets)
 library(shinydashboardPlus)
+library(shinyjs)
 
 addHelpBlock <- function(x, help_text = "") {
   
@@ -55,13 +56,19 @@ dashboardPage(
                         ),
                         tags$button(id = "file_next", class = "pull-right btn btn-default", onclick = 'open_box("chart_box")', "Next", icon("arrow-right"))
                       ),
-                      box(id = "chart_box", width = NULL, title = tagList(icon("chart-line"), "Control Chart Options"), collapsible = TRUE, collapsed = TRUE,
+                      box(id = "chart_box", width = NULL, title = tagList(icon("chart-line"), "Chart Options"), collapsible = TRUE, collapsed = TRUE,
                         tags$p("Once your data is uploaded and it's type is categorized, the Control Chart sidebar item can be used to create a control chart that can be downloaded."),
                         addHelpBlock(selectInput("chart_type", label = "Chart Type", choices = c())),
                         addHelpBlock(selectInput("x_axis", label = "X-Axis", choices = c()), "Choose a column in the dataset for the x-axis"),
                         addHelpBlock(selectInput("y_axis", label = "Y-Axis", choices = c()), "Choose a column in the dataset for the y-axis"),
                         addHelpBlock(selectInput("n", label = "N", choices = c()), "Subgroup sizes (denominator)"),
-                        tags$button(id = "file_next", class = "pull-right btn btn-default", onclick = 'open_box("download_box")', "Next", icon("arrow-right"))
+                        tags$button(id = "file_next", class = "pull-right btn btn-default", onclick = 'open_box("label_box")', "Next", icon("arrow-right"))
+                      ),
+                      box(id = "label_box", width = NULL, title = tagList(icon("tags"), "Chart Labels"), collapsible = TRUE, collapsed = TRUE,
+                          addHelpBlock(textInput("main_title", label = "Main Title")),
+                          addHelpBlock(textInput("x_title", label = "X-axis Label")),
+                          addHelpBlock(textInput("y_title", label = "Y-axis Label")),
+                          tags$button(id = "file_next", class = "pull-right btn btn-default", onclick = 'open_box("download_box")', "Next", icon("arrow-right"))
                       ),
                       box(id = "download_box", width = NULL, title = tagList(icon("download"), "Download Chart"), collapsible = TRUE, collapsed = TRUE,
                         fluidRow(
