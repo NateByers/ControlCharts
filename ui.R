@@ -35,7 +35,7 @@ dashboardPage(
                           tags$button(id = "file_next", class = "pull-right btn btn-default", disabled = 'disabled', onclick = 'open_box("typing_box")', "Next", icon("arrow-right"))
                       ),
                       box(id = "typing_box", width = NULL, title = tagList(icon("project-diagram"), "Data Typing"), collapsible = TRUE, collapsed = TRUE,
-                        tags$p("This Data Typing box allows you to categorize the type of data you are uploading so that the right control chart can be selected. The selections are based on the flow chart on page 151 of The Health Care Data Guide."),
+                        tags$p("This Data Typing box allows you to categorize the type of data you are uploading so that the right control chart can be selected."),
                         addHelpBlock(selectizeInput("data_type", label = "Type of Data",
                                                                  choices = c("Count or Classification",
                                                                              "Continuous")), "Testing"),
